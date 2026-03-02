@@ -1,0 +1,13 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Key Cap Base -->
+  <rect x="4" y="4" width="32" height="32" rx="8" fill="#111111"/>
+  <rect x="4" y="4" width="32" height="32" rx="8" stroke="#D183E8" stroke-width="1" stroke-opacity="0.3"/>
+
+  <!-- Prompt Symbol (representing the 'Which' part) -->
+  <path d="M12 14L18 20L12 26" stroke="#D183E8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- The Cursor/Next Key Placeholder -->
+  <rect x="22" y="24" width="6" height="2" fill="#80ADF4">
+    <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+  </rect>
+</svg>

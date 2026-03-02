@@ -1,0 +1,14 @@
+[versions]
+kotlin = "2.1.0"
+intellijPlatform = "2.5.0"
+changelog = "2.2.1"
+kotlinxSerialization = "1.7.3"
+
+[libraries]
+junit = { group = "junit", name = "junit", version = "4.13.2" }
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+intellijPlatform = { id = "org.jetbrains.intellij.platform", version.ref = "intellijPlatform" }
+changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }

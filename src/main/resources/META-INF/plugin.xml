@@ -1,0 +1,60 @@
+<idea-plugin>
+    <id>lazyideavim.whichkeylazy</id>
+    <name>Which Key Lazy</name>
+    <vendor email="milkynoodles@proton.me" url="https://github.com/brandonkramer/which-key-lazy/">Brandon K</vendor>
+
+    <description><![CDATA[
+    A LazyVim-style which-key.nvim popup for IdeaVim users.
+    Press your leader key to see available bindings in a multi-column grid.
+    Navigate groups, execute actions, all without leaving the keyboard.
+    ]]></description>
+
+    <change-notes><![CDATA[
+    <b>0.1.0</b>
+    <ul>
+      <li>Initial release</li>
+      <li>Auto-discovers IdeaVim leader mappings via runtime API</li>
+      <li>Hierarchical group navigation with breadcrumb bar</li>
+      <li>Theme-aware colors from editor color scheme</li>
+      <li>Smart group icons based on description keywords</li>
+      <li>Customizable via g:WhichKeyDesc_ variables and ~/.whichkey-lazy.json</li>
+      <li>LazyVim default group names (+buffer, +code, +git, etc.)</li>
+    </ul>
+    ]]></change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>IdeaVIM</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+            serviceImplementation="lazyideavim.whichkeylazy.config.WhichKeyConfigService"/>
+        <applicationService
+            serviceImplementation="lazyideavim.whichkeylazy.WhichKeyPluginDisposable"/>
+        <postStartupActivity
+            implementation="lazyideavim.whichkeylazy.WhichKeyStartup"/>
+        <notificationGroup id="lazyideavim.whichkeylazy"
+            displayType="BALLOON"/>
+    </extensions>
+
+    <!-- Register as an IdeaVim extension: activated via "set which-key" in .ideavimrc -->
+    <extensions defaultExtensionNs="IdeaVIM">
+        <vimExtension implementation="lazyideavim.whichkeylazy.WhichKeyVimExtension"
+                      name="which-key"/>
+    </extensions>
+
+    <actions>
+        <action id="WhichKeyLazyLeader"
+                class="lazyideavim.whichkeylazy.WhichKeyAction"
+                text="Which Key Lazy: Show Leader Menu"
+                description="Opens the which-key popup showing available key bindings"
+                icon="/icons/logo.svg">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="WhichKeyLazyReloadConfig"
+                class="lazyideavim.whichkeylazy.config.ReloadConfigAction"
+                text="Which Key Lazy: Reload Config"
+                description="Reloads the which-key configuration from disk"
+                icon="/icons/logo.svg">
+        </action>
+    </actions>
+</idea-plugin>
