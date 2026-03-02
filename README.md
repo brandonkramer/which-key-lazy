@@ -1,5 +1,5 @@
 <img src="src/main/resources/pluginIcon.svg" width="90" height="90" alt="Which Key Lazy logo"/>
-----------
+
 # Which Key LazyVim-style
 
 A [which-key](https://github.com/folke/which-key.nvim) LazyVim-style popup for JetBrains IDEs with IdeaVim. Press your leader key and see all available keybindings in a clean, navigable popup — just like LazyVim.
