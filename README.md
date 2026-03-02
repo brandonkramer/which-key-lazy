@@ -4,7 +4,8 @@
 
 A [which-key](https://github.com/folke/which-key.nvim) LazyVim-style popup for JetBrains IDEs with IdeaVim. Press your leader key and see all available keybindings in a clean, navigable popup — just like LazyVim.
 
-**Requires [IdeaVim](https://plugins.jetbrains.com/plugin/164-ideavim).**
+- **Requires:** [IdeaVim](https://plugins.jetbrains.com/plugin/164-ideavim)
+- **Download:** https://plugins.jetbrains.com/plugin/30446-which-key-lazy 
 
 ![Which Key Preview](./assets/demo.gif)
 
@@ -303,3 +304,7 @@ nmap <leader>| <c-w>v
 ## License
 
 MIT
+
+## Reference
+
+This plugin is inspired by [idea-which-key](https://github.com/TheBlob42/idea-which-key)
