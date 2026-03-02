@@ -3,9 +3,20 @@ package lazyideavim.whichkeylazy.dispatch
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.*
-import com.intellij.openapi.actionSystem.ex.ActionUtil
+import java.lang.reflect.Method
 
 object ActionExecutor {
+
+    private val performActionMethod: Method? by lazy {
+        runCatching {
+            Class.forName("com.intellij.openapi.actionSystem.ex.ActionUtil")
+                .getMethod(
+                    "performActionDumbAwareWithCallbacks",
+                    AnAction::class.java,
+                    AnActionEvent::class.java
+                )
+        }.getOrNull()
+    }
 
     fun execute(actionId: String, dataContext: DataContext) {
         val action = ActionManager.getInstance().getAction(actionId)
@@ -29,6 +40,15 @@ object ActionExecutor {
             ActionUiKind.NONE,
             null
         )
-        ActionUtil.performActionDumbAwareWithCallbacks(action, event)
+        val method = performActionMethod
+        if (method != null) {
+            try {
+                method.invoke(null, action, event)
+            } catch (_: Exception) {
+                ActionManager.getInstance().tryToExecute(action, null, null, ActionPlaces.KEYBOARD_SHORTCUT, true)
+            }
+        } else {
+            ActionManager.getInstance().tryToExecute(action, null, null, ActionPlaces.KEYBOARD_SHORTCUT, true)
+        }
     }
 }

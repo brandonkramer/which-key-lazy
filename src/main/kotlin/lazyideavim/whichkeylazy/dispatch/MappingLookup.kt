@@ -12,6 +12,7 @@ import com.maddyhome.idea.vim.key.MappingInfo
 import com.maddyhome.idea.vim.key.ToActionMappingInfo
 import com.maddyhome.idea.vim.key.ToKeysMappingInfo
 import java.awt.event.KeyEvent
+import java.lang.reflect.Method
 import javax.swing.KeyStroke
 
 /**
@@ -177,7 +178,6 @@ object MappingLookup {
         return LookupResult(emptyList(), entries)
     }
 
-    @Suppress("DEPRECATION")
     private fun collectUserMappings(
         typedKeySequence: List<KeyStroke>,
         mappingMode: MappingMode,
@@ -185,10 +185,12 @@ object MappingLookup {
     ) {
         try {
             val keyMapping = injector.keyGroup.getKeyMapping(mappingMode)
-            for (mappingKeyStrokes in keyMapping) {
-                if (mappingKeyStrokes.isNotEmpty() && isPlugOrActionKey(mappingKeyStrokes[0])) continue
+            val entries = getMappingEntriesViaGetAll(keyMapping, typedKeySequence)
+                ?: getMappingEntriesViaIterator(keyMapping, typedKeySequence)
+
+            for ((mappingKeyStrokes, mappingInfo) in entries) {
                 if (mappingKeyStrokes.size <= typedKeySequence.size) continue
-                if (mappingKeyStrokes.subList(0, typedKeySequence.size) != typedKeySequence) continue
+                if (mappingKeyStrokes.isNotEmpty() && isPlugOrActionKey(mappingKeyStrokes[0])) continue
 
                 val nextKeyStroke = mappingKeyStrokes[typedKeySequence.size]
                 if (isPlugOrActionKey(nextKeyStroke)) continue
@@ -197,9 +199,8 @@ object MappingLookup {
                 if (nextKey in nestedMappings) continue
 
                 val isPrefix = mappingKeyStrokes.size > typedKeySequence.size + 1
-                val mappingInfo = keyMapping[mappingKeyStrokes]
-                val actionId = mappingInfo?.let { extractActionId(it) }
-                val desc = mappingInfo?.let { resolveDescription(actionId, it) } ?: "no description"
+                val actionId = extractActionId(mappingInfo)
+                val desc = resolveDescription(actionId, mappingInfo)
 
                 nestedMappings[nextKey] = NestedEntry(
                     isPrefix = isPrefix,
@@ -209,6 +210,46 @@ object MappingLookup {
                 )
             }
         } catch (_: Exception) {}
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun getMappingEntriesViaGetAll(
+        keyMapping: Any,
+        prefix: List<KeyStroke>
+    ): List<Pair<List<KeyStroke>, MappingInfo>>? {
+        val method = keyMappingGetAllMethod ?: return null
+        return try {
+            val sequence = method.invoke(keyMapping, prefix) as Sequence<Any>
+            sequence.map { entry ->
+                val pathMethod = entryGetPathMethod
+                    ?: entry::class.java.getMethod("getPath").also { entryGetPathMethod = it }
+                val infoMethod = entryGetMappingInfoMethod
+                    ?: entry::class.java.getMethod("getMappingInfo").also { entryGetMappingInfoMethod = it }
+                val path = pathMethod.invoke(entry) as List<KeyStroke>
+                val info = infoMethod.invoke(entry) as MappingInfo
+                path to info
+            }.toList()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun getMappingEntriesViaIterator(
+        keyMapping: com.maddyhome.idea.vim.key.KeyMapping,
+        prefix: List<KeyStroke>
+    ): List<Pair<List<KeyStroke>, MappingInfo>> {
+        val method = keyMappingIteratorMethod ?: throw NoSuchMethodException("iterator")
+        val iter = method.invoke(keyMapping) as Iterator<List<KeyStroke>>
+        return buildList {
+            while (iter.hasNext()) {
+                val keyStrokes = iter.next()
+                if (keyStrokes.size <= prefix.size) continue
+                if (keyStrokes.subList(0, prefix.size) != prefix) continue
+                val info = keyMapping[keyStrokes] ?: continue
+                add(keyStrokes to info)
+            }
+        }
     }
 
     private fun collectBuiltinActions(
@@ -307,6 +348,28 @@ object MappingLookup {
 
     private val ACTION_PATTERN = Regex(":action\\s*(\\S+)")
 
+    // Cached reflection method lookups
+    private val keyMappingGetAllMethod: Method? by lazy {
+        runCatching {
+            com.maddyhome.idea.vim.key.KeyMapping::class.java
+                .getMethod("getAll", List::class.java)
+        }.getOrNull()
+    }
+    private val keyMappingIteratorMethod: Method? by lazy {
+        runCatching {
+            com.maddyhome.idea.vim.key.KeyMapping::class.java
+                .getMethod("iterator")
+        }.getOrNull()
+    }
+    private val vimAsStringMethod: Method? by lazy {
+        runCatching {
+            Class.forName("com.maddyhome.idea.vim.vimscript.model.datatypes.VimDataType")
+                .getMethod("asString")
+        }.getOrNull()
+    }
+    @Volatile private var entryGetPathMethod: Method? = null
+    @Volatile private var entryGetMappingInfoMethod: Method? = null
+
     // VK_PLUG and VK_ACTION are private in IdeaVim, so we derive them
     private val VK_PLUG = KeyEvent.CHAR_UNDEFINED.code - 1
     private val VK_ACTION = KeyEvent.CHAR_UNDEFINED.code - 2
@@ -325,7 +388,11 @@ object MappingLookup {
 
     fun getLeaderChar(): Char {
         return try {
-            val leaderStr = injector.variableService.getGlobalVariableValue("mapleader")?.asString()
+            val leaderValue = injector.variableService.getGlobalVariableValue("mapleader")
+            val leaderStr = leaderValue?.let {
+                val asString = vimAsStringMethod ?: return@let null
+                asString.invoke(it) as String
+            }
             when {
                 leaderStr.isNullOrEmpty() -> '\\'
                 leaderStr == " " || leaderStr.equals("<Space>", ignoreCase = true) -> ' '

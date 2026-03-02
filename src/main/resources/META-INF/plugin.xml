@@ -10,6 +10,19 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>0.1.1.1</b>
+    <ul>
+      <li>Eliminate all deprecated API usages flagged by plugin verifier</li>
+      <li>Cache reflected method lookups for better performance</li>
+    </ul>
+    <b>0.1.1</b>
+    <ul>
+      <li>Fix popup positioning when scrolled down in a file</li>
+      <li>Fix binary incompatibility with IntelliJ 2025.3+ (KeyMapping.getAll reflection)</li>
+      <li>Add plugin icon to breadcrumb bar and Tools menu</li>
+      <li>Animated blinking cursor in breadcrumb logo</li>
+      <li>Theme-aware breadcrumb logo colors</li>
+    </ul>
     <b>0.1.0</b>
     <ul>
       <li>Initial release</li>

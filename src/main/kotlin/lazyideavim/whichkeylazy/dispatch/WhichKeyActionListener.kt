@@ -16,6 +16,7 @@ import com.maddyhome.idea.vim.impl.state.toMappingMode
 import com.maddyhome.idea.vim.options.OptionAccessScope
 import com.maddyhome.idea.vim.newapi.vim
 import java.awt.event.KeyEvent
+import java.lang.reflect.Method
 import javax.swing.KeyStroke
 
 /**
@@ -25,6 +26,13 @@ import javax.swing.KeyStroke
  * Hides popup at start of each handler, then re-shows if nested mappings exist.
  */
 class WhichKeyActionListener : AnActionListener {
+
+    private val vimAsBooleanMethod: Method? by lazy {
+        runCatching {
+            Class.forName("com.maddyhome.idea.vim.vimscript.model.datatypes.VimDataType")
+                .getMethod("asBoolean")
+        }.getOrNull()
+    }
 
     override fun beforeEditorTyping(c: Char, dataContext: DataContext) {
         val wasShowing = WhichKeyPopupManager.isShowing
@@ -89,10 +97,12 @@ class WhichKeyActionListener : AnActionListener {
         val mappingMode = vimEditor.mode.toMappingMode()
 
         val whichKeyOption = injector.optionGroup.getOption("which-key") ?: return
-        val optionEnabled = injector.optionGroup.getOptionValue(
+        val optionValue = injector.optionGroup.getOptionValue(
             whichKeyOption,
             OptionAccessScope.EFFECTIVE(vimEditor)
-        ).asBoolean()
+        )
+        val asBooleanMethod = vimAsBooleanMethod ?: return
+        val optionEnabled = asBooleanMethod.invoke(optionValue) as Boolean
         if (!optionEnabled) return
 
         // Don't show popup when IdeaVim expects a DIGRAPH argument (after f, t, r, etc.)

@@ -10,6 +10,7 @@ import com.maddyhome.idea.vim.key.MappingInfo
 import com.maddyhome.idea.vim.key.ToActionMappingInfo
 import com.maddyhome.idea.vim.key.ToKeysMappingInfo
 import java.awt.event.KeyEvent
+import java.lang.reflect.Method
 import javax.swing.Icon
 import javax.swing.KeyStroke
 
@@ -59,7 +60,9 @@ object IdeaVimApiReader {
             val descRegex = Regex("([^ \\t]+)[ \\t]*(.*)")
             for ((name, value) in injector.variableService.getGlobalVariables()) {
                 if (!name.startsWith("WhichKeyDesc_")) continue
-                val match = descRegex.find(value.asString()) ?: continue
+                val asString = vimAsStringMethod ?: continue
+                val valueStr = asString.invoke(value) as String
+                val match = descRegex.find(valueStr) ?: continue
                 val keySequence = match.groupValues[1]
                 val description = match.groupValues[2].trim()
 
@@ -97,27 +100,39 @@ object IdeaVimApiReader {
 
         return try {
             extractViaGetAll(keyMapping, leaderPrefix)
-        } catch (_: NoSuchMethodError) {
+        } catch (_: Exception) {
             extractViaIterable(keyMapping, leaderPrefix)
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun extractViaGetAll(
         keyMapping: com.maddyhome.idea.vim.key.KeyMapping,
         leaderPrefix: List<KeyStroke>
     ): List<FlatMapping> {
-        return keyMapping.getAll(leaderPrefix).mapNotNull { entry ->
-            processMapping(entry.getPath(), entry.mappingInfo)
+        val method = keyMappingGetAllMethod ?: throw NoSuchMethodException("getAll")
+        val sequence = method.invoke(keyMapping, leaderPrefix) as Sequence<Any>
+        return sequence.mapNotNull { entry ->
+            val pathMethod = entryGetPathMethod
+                ?: entry::class.java.getMethod("getPath").also { entryGetPathMethod = it }
+            val infoMethod = entryGetMappingInfoMethod
+                ?: entry::class.java.getMethod("getMappingInfo").also { entryGetMappingInfoMethod = it }
+            val path = pathMethod.invoke(entry) as List<KeyStroke>
+            val info = infoMethod.invoke(entry) as MappingInfo
+            processMapping(path, info)
         }.toList()
     }
 
-    @Suppress("DEPRECATION")
+    @Suppress("UNCHECKED_CAST")
     private fun extractViaIterable(
         keyMapping: com.maddyhome.idea.vim.key.KeyMapping,
         leaderPrefix: List<KeyStroke>
     ): List<FlatMapping> {
+        val method = keyMappingIteratorMethod ?: throw NoSuchMethodException("iterator")
+        val iter = method.invoke(keyMapping) as Iterator<List<KeyStroke>>
         return buildList {
-            for (keyStrokes in keyMapping) {
+            while (iter.hasNext()) {
+                val keyStrokes = iter.next()
                 if (keyStrokes.size < leaderPrefix.size) continue
                 if (keyStrokes.subList(0, leaderPrefix.size) != leaderPrefix) continue
 
@@ -178,6 +193,28 @@ object IdeaVimApiReader {
 
         return null to info.getPresentableString()
     }
+
+    // Cached reflection method lookups
+    private val keyMappingGetAllMethod: Method? by lazy {
+        runCatching {
+            com.maddyhome.idea.vim.key.KeyMapping::class.java
+                .getMethod("getAll", List::class.java)
+        }.getOrNull()
+    }
+    private val keyMappingIteratorMethod: Method? by lazy {
+        runCatching {
+            com.maddyhome.idea.vim.key.KeyMapping::class.java
+                .getMethod("iterator")
+        }.getOrNull()
+    }
+    private val vimAsStringMethod: Method? by lazy {
+        runCatching {
+            Class.forName("com.maddyhome.idea.vim.vimscript.model.datatypes.VimDataType")
+                .getMethod("asString")
+        }.getOrNull()
+    }
+    @Volatile private var entryGetPathMethod: Method? = null
+    @Volatile private var entryGetMappingInfoMethod: Method? = null
 
     private val ACTION_PATTERN = Regex(":action\\s*(\\S+)")
     private const val UNMAPPABLE = "\u0000"
