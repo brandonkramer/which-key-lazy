@@ -10,6 +10,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>0.1.2</b>
+    <ul>
+      <li>Fix compatibility with IntelliJ 2025.3+ and 2026.1 (IC/IU unification)</li>
+      <li>Extend support up to IntelliJ 2026.1 (build 261)</li>
+    </ul>
+    <b>0.1.1.2</b>
+    <ul>
+      <li>Fix plugin icon not showing in Marketplace</li>
+    </ul>
     <b>0.1.1.1</b>
     <ul>
       <li>Eliminate all deprecated API usages flagged by plugin verifier</li>

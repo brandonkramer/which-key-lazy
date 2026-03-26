@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.1.0"
-intellijPlatform = "2.5.0"
+intellijPlatform = "2.11.0"
 changelog = "2.2.1"
 kotlinxSerialization = "1.7.3"
 
