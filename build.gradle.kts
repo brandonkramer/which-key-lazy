@@ -25,8 +25,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     intellijPlatform {
-        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
-        plugin("IdeaVIM", "2.27.2")
+        intellijIdea(providers.gradleProperty("platformVersion"))
+        plugin("IdeaVIM", "2.44.1")
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
@@ -43,6 +43,7 @@ intellijPlatform {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
             untilBuild = providers.gradleProperty("pluginUntilBuild")
         }
+        changeNotes = ""
     }
     pluginVerification {
         ides {
