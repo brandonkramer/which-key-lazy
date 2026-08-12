@@ -12,9 +12,8 @@
     <change-notes><![CDATA[
     <b>0.1.3</b>
     <ul>
-      <li>Extend support up to IntelliJ 2026.2 and IdeaVim 2.44.1</li>
-      <li>Raise until-build ceiling to 271.*</li>
-      <li>Update Gradle wrapper and IntelliJ Platform/Kotlin Gradle plugin versions</li>
+      <li>Extend support to IntelliJ 2026.2 (build 262)</li>
+      <li>Use the Kotlin runtime bundled with the IntelliJ Platform</li>
     </ul>
     <b>0.1.2</b>
     <ul>

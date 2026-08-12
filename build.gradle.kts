@@ -22,11 +22,13 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3") {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    }
 
     intellijPlatform {
-        intellijIdea(providers.gradleProperty("platformVersion"))
-        plugin("IdeaVIM", "2.44.1")
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
+        plugin("IdeaVIM", "2.27.2")
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
@@ -43,7 +45,6 @@ intellijPlatform {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
             untilBuild = providers.gradleProperty("pluginUntilBuild")
         }
-        changeNotes = ""
     }
     pluginVerification {
         ides {
