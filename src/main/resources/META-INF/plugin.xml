@@ -10,6 +10,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <b>0.1.3</b>
+    <ul>
+      <li>Extend support to IntelliJ 2026.2 (build 262)</li>
+      <li>Use the Kotlin runtime bundled with the IntelliJ Platform</li>
+    </ul>
     <b>0.1.2</b>
     <ul>
       <li>Fix compatibility with IntelliJ 2025.3+ and 2026.1 (IC/IU unification)</li>
