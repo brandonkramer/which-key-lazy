@@ -19,6 +19,10 @@ class BreadcrumbBar : JPanel() {
     init {
         isOpaque = false
         preferredSize = Dimension(0, JBUI.scale(34))
+    }
+
+    override fun addNotify() {
+        super.addNotify()
         blinkTimer.start()
     }
 
@@ -55,6 +59,7 @@ class BreadcrumbBar : JPanel() {
             x += fm.stringWidth(segment)
         }
 
+        // Bottom border line
         g2.color = WhichKeyColors.BORDER
         val dividerInset = JBUI.scale(10)
         g2.fillRect(dividerInset, height - 1, width - dividerInset * 2, 1)
@@ -99,7 +104,7 @@ class BreadcrumbBar : JPanel() {
     }
 
     override fun removeNotify() {
-        super.removeNotify()
         blinkTimer.stop()
+        super.removeNotify()
     }
 }

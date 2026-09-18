@@ -14,6 +14,7 @@ class WhichKeyPanel(
 
     private var entries: List<KeyNode> = emptyList()
     private var layout = GridLayout(0, 0)
+    private var columnWidth = MIN_COL_WIDTH
     private var maxAvailableWidth: Int = Int.MAX_VALUE
     private var maxAvailableHeight: Int = Int.MAX_VALUE
 
@@ -45,18 +46,19 @@ class WhichKeyPanel(
     private fun recomputeSize() {
         val entryCount = entries.size
         if (entryCount == 0) {
+            columnWidth = MIN_COL_WIDTH
             preferredSize = Dimension(0, 0)
             return
         }
 
         val metrics = getFontMetrics(entryFont())
-        val colWidth = computeColumnWidth(metrics)
+        columnWidth = computeColumnWidth(metrics)
 
         // How many rows fit in the available height?
         val maxRows = ((maxAvailableHeight - PADDING * 2) / ROW_HEIGHT).coerceAtLeast(1)
 
         // Fill top-to-bottom, wrapping at the configured row limit.
-        val maxColumns = ((maxAvailableWidth - PADDING * 2) / colWidth).coerceAtLeast(1)
+        val maxColumns = ((maxAvailableWidth - PADDING * 2) / columnWidth).coerceAtLeast(1)
         layout = PopupGeometry.grid(
             entryCount,
             maxRows,
@@ -66,7 +68,7 @@ class WhichKeyPanel(
         )
 
         preferredSize = Dimension(
-            layout.columns * colWidth + PADDING * 2,
+            layout.columns * columnWidth + PADDING * 2,
             layout.rows * ROW_HEIGHT + PADDING * 2
         )
     }
@@ -99,7 +101,6 @@ class WhichKeyPanel(
         val font = entryFont()
         g2.font = font
         val fm = g2.fontMetrics
-        val colWidth = computeColumnWidth(fm)
         val showIcons = settings.showIcons
 
         val rows = layout.rows
@@ -109,7 +110,7 @@ class WhichKeyPanel(
             val col = index / rows
             val row = index % rows
 
-            val x = PADDING + col * colWidth
+            val x = PADDING + col * columnWidth
             val y = PADDING + row * ROW_HEIGHT
             val textY = y + (ROW_HEIGHT + fm.ascent - fm.descent) / 2
 
@@ -121,6 +122,7 @@ class WhichKeyPanel(
                     val iconY = y + (ROW_HEIGHT - ICON_SIZE) / 2
                     icon.paintIcon(this, g2, cursorX, iconY)
                 }
+                // Keep the icon slot reserved so descriptions remain aligned.
                 cursorX += ICON_SIZE + ICON_RIGHT_MARGIN
             }
 
@@ -143,7 +145,7 @@ class WhichKeyPanel(
                 is KeyNode.GroupNode -> WhichKeyColors.GROUP_FG
                 is KeyNode.ActionNode -> WhichKeyColors.DESC_FG
             }
-            val maxDescWidth = colWidth - (cursorX - x) - ENTRY_PADDING
+            val maxDescWidth = columnWidth - (cursorX - x) - ENTRY_PADDING
             val clippedDesc = clipText(desc, fm, maxDescWidth)
             g2.drawString(clippedDesc, cursorX, textY)
         }

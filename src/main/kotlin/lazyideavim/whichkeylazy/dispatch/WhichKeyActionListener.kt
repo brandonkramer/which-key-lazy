@@ -23,7 +23,8 @@ import javax.swing.KeyStroke
  * Observes keystrokes and manages the which-key popup lifecycle.
  *
  * Reads IdeaVim's KeyHandler state on every keystroke (no self-tracking).
- * Hides popup at start of each handler, then re-shows if nested mappings exist.
+ * Keeps an open popup while navigating nested mappings and hides it when the
+ * current key sequence has no children.
  */
 class WhichKeyActionListener : AnActionListener {
 

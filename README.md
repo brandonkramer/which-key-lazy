@@ -145,13 +145,13 @@ For each entry, the description is resolved in this order:
 
 ## Theme Integration
 
-The popup colors are derived from your current editor color scheme:
+The popup follows the current JetBrains UI and editor themes:
 
-- **Background** — editor background color
-- **Text** — editor default foreground
-- **Key badge / Group labels** — keyword color from the scheme
-- **Separator** — blended foreground/background
-- **Font** — your editor's configured font and size
+- **Background / Text** — JetBrains popup colors
+- **Key badge** — inactive popup selection color
+- **Key / Group labels** — keyword color from the editor scheme
+- **Separator / Border** — JetBrains popup colors
+- **Font** — JetBrains UI font and size
 
 This means the popup looks correct with any theme: Darcula, Light, Solarized, Dracula, One Dark, Nord, Tokyo Night, etc. If you change your theme, the popup updates automatically.
 
@@ -161,7 +161,7 @@ Action entries display the icon from IntelliJ's action registry. These are the s
 
 Group entries get smart icons based on their description — for example, +git shows a branch icon, +debug shows a debugger icon, +search shows a search icon. Groups that don't match any known keyword fall back to a folder icon. You can override any group's icon via `~/.whichkey-lazy.json` (see below).
 
-Entries without an icon display a small dot placeholder so text stays aligned.
+Entries without an icon keep the same icon space so text stays aligned.
 
 ## Configuration
 
@@ -188,7 +188,7 @@ The plugin works out of the box with zero configuration. For advanced customizat
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `delay` | `200` | Milliseconds of inactivity before the popup appears |
+| `delay` | `200` | Milliseconds before popup appears |
 | `maxColumns` | `5` | Maximum number of columns in the popup |
 | `maxRows` | `8` | Preferred maximum number of rows before entries wrap into another column |
 | `sortGroupsFirst` | `true` | Show groups before actions |

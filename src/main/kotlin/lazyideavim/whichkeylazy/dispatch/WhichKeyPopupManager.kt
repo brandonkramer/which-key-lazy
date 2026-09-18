@@ -6,25 +6,32 @@ import lazyideavim.whichkeylazy.ui.WhichKeyPopup
 import com.intellij.openapi.editor.Editor
 import javax.swing.Timer
 
+/**
+ * Popup lifecycle manager.
+ * Delays the initial popup and updates it in place while navigating groups.
+ */
 object WhichKeyPopupManager {
 
     private var popup: WhichKeyPopup? = null
-    private var pendingPopup: Timer? = null
+    private var pendingShow: Timer? = null
 
-    val isActive: Boolean get() = popup?.isShowing == true || pendingPopup != null
+    val isActive: Boolean get() = popup?.isShowing == true || pendingShow != null
 
     fun hidePopup() {
-        pendingPopup?.stop()
-        pendingPopup = null
+        pendingShow?.stop()
+        pendingShow = null
         popup?.close()
         popup = null
     }
 
     fun showPopup(editor: Editor, path: List<String>, entries: Map<String, KeyNode>) {
-        if (entries.isEmpty()) return
+        if (entries.isEmpty()) {
+            hidePopup()
+            return
+        }
 
-        pendingPopup?.stop()
-        pendingPopup = null
+        pendingShow?.stop()
+        pendingShow = null
 
         popup?.let { current ->
             if (current.isShowing && current.isFor(editor)) {
@@ -36,8 +43,8 @@ object WhichKeyPopupManager {
         }
 
         val delay = WhichKeyConfigService.getInstance().settings.delay.coerceAtLeast(0)
-        pendingPopup = Timer(delay) {
-            pendingPopup = null
+        pendingShow = Timer(delay) {
+            pendingShow = null
             if (!editor.isDisposed) {
                 val newPopup = WhichKeyPopup(editor)
                 popup = newPopup

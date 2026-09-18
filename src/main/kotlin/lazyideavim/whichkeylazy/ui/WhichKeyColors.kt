@@ -9,6 +9,9 @@ import java.awt.Color
 import java.awt.Font
 import javax.swing.UIManager
 
+/**
+ * Theme-aware colors derived from JetBrains popup and editor themes.
+ */
 object WhichKeyColors {
 
     private fun scheme() = EditorColorsManager.getInstance().schemeForCurrentUITheme
