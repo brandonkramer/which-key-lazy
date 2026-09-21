@@ -7,6 +7,7 @@ object DefaultConfig {
   "settings": {
     "delay": 200,
     "maxColumns": 5,
+    "maxRows": 8,
     "sortGroupsFirst": true,
     "position": "bottom-right",
     "showIcons": true

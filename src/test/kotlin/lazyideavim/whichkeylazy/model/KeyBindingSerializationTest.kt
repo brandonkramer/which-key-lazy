@@ -31,6 +31,7 @@ class KeyBindingSerializationTest {
         val original = WhichKeySettings(
             delay = 500,
             maxColumns = 3,
+            maxRows = 6,
             sortGroupsFirst = false,
             position = "center",
             showIcons = false

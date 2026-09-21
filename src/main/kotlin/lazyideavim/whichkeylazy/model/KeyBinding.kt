@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class WhichKeySettings(
     val delay: Int = 200,
     val maxColumns: Int = 5,
+    val maxRows: Int = 8,
     val sortGroupsFirst: Boolean = true,
     val position: String = "bottom-right",
     val showIcons: Boolean = true

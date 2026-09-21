@@ -2,9 +2,9 @@ package lazyideavim.whichkeylazy.ui
 
 import lazyideavim.whichkeylazy.model.KeyNode
 import lazyideavim.whichkeylazy.model.WhichKeySettings
+import com.intellij.util.ui.JBUI
 import java.awt.*
 import javax.swing.JPanel
-import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
@@ -13,14 +13,17 @@ class WhichKeyPanel(
 ) : JPanel() {
 
     private var entries: List<KeyNode> = emptyList()
+    private var layout = GridLayout(0, 0)
+    private var columnWidth = MIN_COL_WIDTH
+    private var maxAvailableWidth: Int = Int.MAX_VALUE
     private var maxAvailableHeight: Int = Int.MAX_VALUE
 
     init {
-        isOpaque = true
-        background = WhichKeyColors.PANEL_BG
+        isOpaque = false
     }
 
-    fun setAvailableHeight(maxHeight: Int) {
+    fun setAvailableSize(maxWidth: Int, maxHeight: Int) {
+        maxAvailableWidth = maxWidth
         maxAvailableHeight = maxHeight
     }
 
@@ -43,23 +46,30 @@ class WhichKeyPanel(
     private fun recomputeSize() {
         val entryCount = entries.size
         if (entryCount == 0) {
+            columnWidth = MIN_COL_WIDTH
             preferredSize = Dimension(0, 0)
             return
         }
 
         val metrics = getFontMetrics(entryFont())
-        val colWidth = computeColumnWidth(metrics)
+        columnWidth = computeColumnWidth(metrics)
 
         // How many rows fit in the available height?
         val maxRows = ((maxAvailableHeight - PADDING * 2) / ROW_HEIGHT).coerceAtLeast(1)
 
-        // Vertical-first: use single column unless entries overflow
-        val rows = min(entryCount, maxRows)
-        val cols = ceil(entryCount.toDouble() / rows).toInt()
+        // Fill top-to-bottom, wrapping at the configured row limit.
+        val maxColumns = ((maxAvailableWidth - PADDING * 2) / columnWidth).coerceAtLeast(1)
+        layout = PopupGeometry.grid(
+            entryCount,
+            maxRows,
+            maxColumns,
+            settings.maxRows,
+            settings.maxColumns
+        )
 
         preferredSize = Dimension(
-            cols * colWidth + PADDING * 2,
-            rows * ROW_HEIGHT + PADDING * 2
+            layout.columns * columnWidth + PADDING * 2,
+            layout.rows * ROW_HEIGHT + PADDING * 2
         )
     }
 
@@ -69,16 +79,15 @@ class WhichKeyPanel(
         for (entry in entries) {
             val keyWidth = fm.stringWidth(displayKey(entry.key)) + KEY_BADGE_PADDING * 2
             val descWidth = fm.stringWidth(entry.description)
-            val separatorWidth = fm.stringWidth(" \u279C ")
             val iconWidth = if (showIcons) ICON_SIZE + ICON_RIGHT_MARGIN else 0
-            val totalWidth = iconWidth + keyWidth + separatorWidth + descWidth + ENTRY_PADDING * 2
+            val totalWidth = iconWidth + keyWidth + KEY_DESCRIPTION_GAP + descWidth + ENTRY_PADDING * 2
             maxWidth = max(maxWidth, totalWidth)
         }
         return min(maxWidth, MAX_COL_WIDTH)
     }
 
     private fun entryFont(): Font {
-        return WhichKeyColors.EDITOR_FONT.deriveFont(Font.PLAIN, WhichKeyColors.EDITOR_FONT_SIZE.toFloat())
+        return WhichKeyColors.UI_FONT.deriveFont(Font.PLAIN, WhichKeyColors.UI_FONT_SIZE)
     }
 
     override fun paintComponent(g: Graphics) {
@@ -92,19 +101,16 @@ class WhichKeyPanel(
         val font = entryFont()
         g2.font = font
         val fm = g2.fontMetrics
-        val colWidth = computeColumnWidth(fm)
         val showIcons = settings.showIcons
 
-        // Compute layout: how many rows per column
-        val maxRows = ((maxAvailableHeight - PADDING * 2) / ROW_HEIGHT).coerceAtLeast(1)
-        val rows = min(entries.size, maxRows)
+        val rows = layout.rows
 
         for ((index, entry) in entries.withIndex()) {
             // Column-major order: fill top-to-bottom, then next column
             val col = index / rows
             val row = index % rows
 
-            val x = PADDING + col * colWidth
+            val x = PADDING + col * columnWidth
             val y = PADDING + row * ROW_HEIGHT
             val textY = y + (ROW_HEIGHT + fm.ascent - fm.descent) / 2
 
@@ -115,40 +121,31 @@ class WhichKeyPanel(
                 if (icon != null) {
                     val iconY = y + (ROW_HEIGHT - ICON_SIZE) / 2
                     icon.paintIcon(this, g2, cursorX, iconY)
-                } else {
-                    // Draw a small white dot as placeholder for alignment
-                    val dotSize = 6
-                    val dotX = cursorX + (ICON_SIZE - dotSize) / 2
-                    val dotY = y + (ROW_HEIGHT - dotSize) / 2
-                    g2.color = WhichKeyColors.SEPARATOR
-                    g2.fillOval(dotX, dotY, dotSize, dotSize)
                 }
+                // Keep the icon slot reserved so descriptions remain aligned.
                 cursorX += ICON_SIZE + ICON_RIGHT_MARGIN
             }
 
             val keyText = displayKey(entry.key)
             val keyWidth = fm.stringWidth(keyText) + KEY_BADGE_PADDING * 2
-            val badgeHeight = ROW_HEIGHT - 6
-            val badgeY = y + 3
+            val badgeHeight = ROW_HEIGHT - JBUI.scale(8)
+            val badgeY = y + JBUI.scale(4)
             g2.color = WhichKeyColors.KEY_BG
-            g2.fillRoundRect(cursorX, badgeY, keyWidth, badgeHeight, 6, 6)
+            g2.fillRoundRect(cursorX, badgeY, keyWidth, badgeHeight, JBUI.scale(8), JBUI.scale(8))
 
             g2.color = WhichKeyColors.KEY_FG
             g2.font = font.deriveFont(Font.BOLD)
             g2.drawString(keyText, cursorX + KEY_BADGE_PADDING, textY)
             g2.font = font
 
-            cursorX += keyWidth + 4
-            g2.color = WhichKeyColors.SEPARATOR
-            g2.drawString("\u279C", cursorX, textY)
-            cursorX += fm.stringWidth("\u279C") + 4
+            cursorX += keyWidth + KEY_DESCRIPTION_GAP
 
             val desc = entry.description
             g2.color = when (entry) {
                 is KeyNode.GroupNode -> WhichKeyColors.GROUP_FG
                 is KeyNode.ActionNode -> WhichKeyColors.DESC_FG
             }
-            val maxDescWidth = colWidth - (cursorX - x) - ENTRY_PADDING
+            val maxDescWidth = columnWidth - (cursorX - x) - ENTRY_PADDING
             val clippedDesc = clipText(desc, fm, maxDescWidth)
             g2.drawString(clippedDesc, cursorX, textY)
         }
@@ -207,13 +204,14 @@ class WhichKeyPanel(
     }
 
     companion object {
-        private const val ROW_HEIGHT = 28
-        private const val PADDING = 8
-        private const val ENTRY_PADDING = 8
-        private const val KEY_BADGE_PADDING = 6
-        private const val MIN_COL_WIDTH = 140
-        private const val MAX_COL_WIDTH = 420
-        private const val ICON_SIZE = 16
-        private const val ICON_RIGHT_MARGIN = 6
+        private val ROW_HEIGHT get() = JBUI.scale(30)
+        private val PADDING get() = JBUI.scale(10)
+        private val ENTRY_PADDING get() = JBUI.scale(8)
+        private val KEY_BADGE_PADDING get() = JBUI.scale(6)
+        private val KEY_DESCRIPTION_GAP get() = JBUI.scale(8)
+        private val MIN_COL_WIDTH get() = JBUI.scale(152)
+        private val MAX_COL_WIDTH get() = JBUI.scale(420)
+        private val ICON_SIZE get() = JBUI.scale(16)
+        private val ICON_RIGHT_MARGIN get() = JBUI.scale(8)
     }
 }

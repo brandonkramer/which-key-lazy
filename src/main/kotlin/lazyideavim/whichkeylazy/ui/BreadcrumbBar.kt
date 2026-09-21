@@ -1,5 +1,6 @@
 package lazyideavim.whichkeylazy.ui
 
+import com.intellij.util.ui.JBUI
 import java.awt.*
 import java.awt.geom.Path2D
 import java.awt.geom.RoundRectangle2D
@@ -16,9 +17,12 @@ class BreadcrumbBar : JPanel() {
     }
 
     init {
-        isOpaque = true
-        background = WhichKeyColors.PANEL_BG
-        preferredSize = Dimension(0, 40)
+        isOpaque = false
+        preferredSize = Dimension(0, JBUI.scale(34))
+    }
+
+    override fun addNotify() {
+        super.addNotify()
         blinkTimer.start()
     }
 
@@ -33,16 +37,16 @@ class BreadcrumbBar : JPanel() {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
 
-        val font = WhichKeyColors.EDITOR_FONT.deriveFont(Font.BOLD, WhichKeyColors.EDITOR_FONT_SIZE.toFloat())
+        val font = WhichKeyColors.UI_FONT.deriveFont(Font.BOLD, WhichKeyColors.UI_FONT_SIZE)
         g2.font = font
         val fm = g2.fontMetrics
-        var x = 13
+        var x = JBUI.scale(12)
         val y = (height + fm.ascent - fm.descent) / 2
 
-        val iconSize = 24
+        val iconSize = JBUI.scale(18)
         val iconY = (height - iconSize) / 2
         paintLogo(g2, x, iconY, iconSize)
-        x += iconSize + 6
+        x += iconSize + JBUI.scale(6)
 
         for ((i, segment) in segments.withIndex()) {
             if (i > 0) {
@@ -57,7 +61,8 @@ class BreadcrumbBar : JPanel() {
 
         // Bottom border line
         g2.color = WhichKeyColors.BORDER
-        g2.fillRect(0, height - 1, width, 1)
+        val dividerInset = JBUI.scale(10)
+        g2.fillRect(dividerInset, height - 1, width - dividerInset * 2, 1)
 
         g2.dispose()
     }
@@ -99,7 +104,7 @@ class BreadcrumbBar : JPanel() {
     }
 
     override fun removeNotify() {
-        super.removeNotify()
         blinkTimer.stop()
+        super.removeNotify()
     }
 }

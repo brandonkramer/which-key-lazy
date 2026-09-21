@@ -314,8 +314,11 @@ object MappingLookup {
             is ToActionMappingInfo -> mappingInfo.action
             is ToKeysMappingInfo -> {
                 val keysStr = mappingInfo.toKeys.mapNotNull { keyStrokeToChar(it) }.joinToString("")
-                val match = ACTION_PATTERN.find(keysStr)
-                if (match != null) return match.groupValues[1]
+                extractActionIdFromText(keysStr)?.let { return it }
+                runCatching { mappingInfo.getPresentableString() }
+                    .getOrNull()
+                    ?.let(::extractActionIdFromText)
+                    ?.let { return it }
 
                 try {
                     val toKeys = mappingInfo.toKeys.filterNot { isPlugOrActionKey(it) }
@@ -345,8 +348,6 @@ object MappingLookup {
             "???"
         }
     }
-
-    private val ACTION_PATTERN = Regex(":action\\s*(\\S+)")
 
     // Cached reflection method lookups
     private val keyMappingGetAllMethod: Method? by lazy {
@@ -413,3 +414,16 @@ object MappingLookup {
         }
     }
 }
+
+internal fun extractActionIdFromText(text: String): String? {
+    val actionElement = ACTION_ELEMENT_PATTERN.find(text)
+    if (actionElement != null) return actionElement.groupValues[1]
+
+    return COLON_ACTION_PATTERN
+        .find(text)
+        ?.groupValues
+        ?.get(1)
+}
+
+private val ACTION_ELEMENT_PATTERN = Regex("<[Aa]ction>\\(([^)]+)\\)")
+private val COLON_ACTION_PATTERN = Regex(":action\\s+([^\\s<]+)", RegexOption.IGNORE_CASE)

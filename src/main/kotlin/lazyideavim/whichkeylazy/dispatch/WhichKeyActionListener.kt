@@ -23,7 +23,8 @@ import javax.swing.KeyStroke
  * Observes keystrokes and manages the which-key popup lifecycle.
  *
  * Reads IdeaVim's KeyHandler state on every keystroke (no self-tracking).
- * Hides popup at start of each handler, then re-shows if nested mappings exist.
+ * Keeps an open popup while navigating nested mappings and hides it when the
+ * current key sequence has no children.
  */
 class WhichKeyActionListener : AnActionListener {
 
@@ -35,8 +36,7 @@ class WhichKeyActionListener : AnActionListener {
     }
 
     override fun beforeEditorTyping(c: Char, dataContext: DataContext) {
-        val wasShowing = WhichKeyPopupManager.isShowing
-        WhichKeyPopupManager.hidePopup()
+        val wasShowing = WhichKeyPopupManager.isActive
 
         val editor = dataContext.getData(CommonDataKeys.EDITOR) ?: return
         if (!EditorHelper.isFileEditor(editor)) return
@@ -59,8 +59,7 @@ class WhichKeyActionListener : AnActionListener {
         actions: MutableList<AnAction>,
         dataContext: DataContext
     ) {
-        val wasShowing = WhichKeyPopupManager.isShowing
-        WhichKeyPopupManager.hidePopup()
+        val wasShowing = WhichKeyPopupManager.isActive
 
         if (shortcut !is KeyboardShortcut) return
 
@@ -114,6 +113,7 @@ class WhichKeyActionListener : AnActionListener {
         if (result != null && result.entries.isNotEmpty()) {
             WhichKeyPopupManager.showPopup(editor, result.path, result.entries)
         } else {
+            WhichKeyPopupManager.hidePopup()
             // In INSERT/OP_PENDING modes, unmapped chars should pass through
             if (mappingMode != MappingMode.NORMAL && mappingMode != MappingMode.VISUAL) return
 
