@@ -105,9 +105,10 @@ class WhichKeyActionListener : AnActionListener {
         val optionEnabled = asBooleanMethod.invoke(optionValue) as Boolean
         if (!optionEnabled) return
 
-        // Don't show popup when IdeaVim expects a DIGRAPH argument (after f, t, r, etc.)
+        // Don't show popup when IdeaVim expects a character argument (after f, t, r, etc.)
+        // IdeaVim 2.48 merged DIGRAPH into CHARACTER; older versions still report DIGRAPH.
         val expectedArgType = KeyHandler.getInstance().keyHandlerState.commandBuilder.expectedArgumentType
-        if (expectedArgType == Argument.Type.DIGRAPH) return
+        if (expectedArgType == Argument.Type.CHARACTER || expectedArgType?.name == "DIGRAPH") return
 
         val result = MappingLookup.getNestedEntries(typedKeySequence, mappingMode)
 
