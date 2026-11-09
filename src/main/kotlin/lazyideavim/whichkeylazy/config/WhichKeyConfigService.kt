@@ -29,6 +29,12 @@ class WhichKeyConfigService {
         loadBindings()
     }
 
+    fun saveSettings(newSettings: WhichKeySettings): Result<Unit> {
+        return WhichKeyConfig.saveSettings(newSettings).onSuccess {
+            settings = newSettings
+        }
+    }
+
     private fun loadConfigOverrides() {
         WhichKeyConfig.load().onSuccess { result ->
             overrides = result.overrides

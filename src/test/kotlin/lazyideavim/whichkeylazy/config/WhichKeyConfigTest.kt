@@ -41,7 +41,9 @@ class WhichKeyConfigTest {
                 "delay": 500,
                 "maxColumns": 3,
                 "sortGroupsFirst": false,
-                "position": "center",
+                "placement": "center",
+                "gapX": 12,
+                "gapY": 8,
                 "showIcons": false
               }
             }
@@ -50,7 +52,9 @@ class WhichKeyConfigTest {
         assertEquals(500, root.settings.delay)
         assertEquals(3, root.settings.maxColumns)
         assertFalse(root.settings.sortGroupsFirst)
-        assertEquals("center", root.settings.position)
+        assertEquals("center", root.settings.placement)
+        assertEquals(12, root.settings.gapX)
+        assertEquals(8, root.settings.gapY)
         assertFalse(root.settings.showIcons)
     }
 

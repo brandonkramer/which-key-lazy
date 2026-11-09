@@ -2,8 +2,6 @@ package lazyideavim.whichkeylazy.dispatch
 
 import lazyideavim.whichkeylazy.model.KeyNode
 import lazyideavim.whichkeylazy.ui.WhichKeyPopup
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.editor.Editor
 
 /**
@@ -24,16 +22,8 @@ object WhichKeyPopupManager {
     fun showPopup(editor: Editor, path: List<String>, entries: Map<String, KeyNode>) {
         if (entries.isEmpty()) return
 
-        val dataContext = SimpleDataContext.builder()
-            .add(CommonDataKeys.EDITOR, editor)
-            .add(CommonDataKeys.PROJECT, editor.project)
-            .build()
-
-        val newPopup = WhichKeyPopup(editor, dataContext)
+        val newPopup = WhichKeyPopup(editor)
         popup = newPopup
-        newPopup.show(entries)
-        if (path.isNotEmpty()) {
-            newPopup.updateLevel(path, entries)
-        }
+        newPopup.show(path, entries)
     }
 }

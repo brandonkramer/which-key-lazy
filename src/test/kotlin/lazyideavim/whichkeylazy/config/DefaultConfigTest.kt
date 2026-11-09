@@ -33,7 +33,9 @@ class DefaultConfigTest {
         assertEquals(200, root.settings.delay)
         assertEquals(5, root.settings.maxColumns)
         assertTrue(root.settings.sortGroupsFirst)
-        assertEquals("bottom-right", root.settings.position)
+        assertEquals("bottom-center", root.settings.placement)
+        assertEquals(0, root.settings.gapX)
+        assertEquals(0, root.settings.gapY)
         assertTrue(root.settings.showIcons)
     }
 
@@ -100,7 +102,9 @@ class DefaultConfigTest {
         assertEquals(200, defaults.delay)
         assertEquals(5, defaults.maxColumns)
         assertTrue(defaults.sortGroupsFirst)
-        assertEquals("bottom-right", defaults.position)
+        assertEquals("bottom-center", defaults.placement)
+        assertEquals(0, defaults.gapX)
+        assertEquals(0, defaults.gapY)
         assertTrue(defaults.showIcons)
     }
 }

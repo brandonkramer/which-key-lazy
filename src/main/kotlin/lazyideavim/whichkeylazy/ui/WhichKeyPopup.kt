@@ -2,14 +2,13 @@ package lazyideavim.whichkeylazy.ui
 
 import lazyideavim.whichkeylazy.config.WhichKeyConfigService
 import lazyideavim.whichkeylazy.model.KeyNode
-import com.intellij.openapi.actionSystem.DataContext
+import lazyideavim.whichkeylazy.model.PopupPlacement
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.awt.RelativePoint
 import java.awt.BorderLayout
 import java.awt.Dimension
-import java.awt.Point
 import javax.swing.BorderFactory
 import javax.swing.JPanel
 
@@ -18,21 +17,26 @@ import javax.swing.JPanel
  * all keys, and WhichKeyPopupManager updates this popup externally.
  */
 class WhichKeyPopup(
-    private val editor: Editor,
-    private val dataContext: DataContext
+    private val editor: Editor
 ) {
 
     private val breadcrumb = BreadcrumbBar()
     private val gridPanel = WhichKeyPanel(WhichKeyConfigService.getInstance().settings)
 
     private var popup: JBPopup? = null
-    private var rootPanel: JPanel? = null
 
     val isShowing: Boolean
         get() = popup?.isVisible == true
 
-    fun show(bindings: Map<String, KeyNode>) {
-        gridPanel.setAvailableHeight(availableHeight())
+    fun show(path: List<String>, bindings: Map<String, KeyNode>) {
+        val settings = WhichKeyConfigService.getInstance().settings
+        val placement = PopupPlacement.fromId(settings.placement)
+        val gapX = settings.gapX.coerceAtLeast(0)
+        val gapY = settings.gapY.coerceAtLeast(0)
+
+        breadcrumb.updatePath(path)
+        gridPanel.setAvailableHeight(availableHeight(gapY))
+        gridPanel.updateEntries(bindings)
 
         val panel = JPanel(BorderLayout()).apply {
             background = WhichKeyColors.PANEL_BG
@@ -40,9 +44,6 @@ class WhichKeyPopup(
             add(breadcrumb, BorderLayout.NORTH)
             add(gridPanel, BorderLayout.CENTER)
         }
-        rootPanel = panel
-
-        gridPanel.updateEntries(bindings)
 
         popup = JBPopupFactory.getInstance()
             .createComponentPopupBuilder(panel, null)
@@ -55,24 +56,7 @@ class WhichKeyPopup(
             .setResizable(false)
             .createPopup()
 
-        showAtEditorBottom()
-    }
-
-    fun updateLevel(path: List<String>, bindings: Map<String, KeyNode>) {
-        gridPanel.setAvailableHeight(availableHeight())
-        breadcrumb.updatePath(path)
-        gridPanel.updateEntries(bindings)
-
-        rootPanel?.let { panel ->
-            panel.revalidate()
-            panel.repaint()
-            val visibleArea = editor.scrollingModel.visibleArea
-            val prefSize = panel.preferredSize
-            popup?.size = Dimension(
-                prefSize.width.coerceAtLeast(300).coerceAtMost(visibleArea.width),
-                prefSize.height.coerceAtLeast(80)
-            )
-        }
+        showAtEditor(panel, placement, gapX, gapY)
     }
 
     fun close() {
@@ -80,24 +64,36 @@ class WhichKeyPopup(
         popup = null
     }
 
-    private fun availableHeight(): Int {
-        return (editor.scrollingModel.visibleArea.height * 0.6).toInt()
+    private fun availableHeight(gapY: Int): Int {
+        val height = editor.contentComponent.visibleRect.height
+        return (height - gapY).coerceAtLeast(MIN_HEIGHT.coerceAtMost(height))
     }
 
-    private fun showAtEditorBottom() {
-        val panel = rootPanel ?: return
+    private fun showAtEditor(
+        panel: JPanel,
+        placement: PopupPlacement,
+        gapX: Int,
+        gapY: Int
+    ) {
         val contentComponent = editor.contentComponent
         val visibleRect = contentComponent.visibleRect
 
         panel.doLayout()
         val prefSize = panel.preferredSize
-        val popupWidth = prefSize.width.coerceAtLeast(300).coerceAtMost(visibleRect.width)
-        val popupHeight = prefSize.height.coerceAtLeast(80)
+        val maxWidth = (visibleRect.width - gapX)
+            .coerceAtLeast(MIN_WIDTH.coerceAtMost(visibleRect.width))
+        val maxHeight = (visibleRect.height - gapY)
+            .coerceAtLeast(MIN_HEIGHT.coerceAtMost(visibleRect.height))
+        val popupWidth = prefSize.width.coerceAtLeast(MIN_WIDTH).coerceAtMost(maxWidth)
+        val popupHeight = prefSize.height.coerceAtLeast(MIN_HEIGHT).coerceAtMost(maxHeight)
+        val popupSize = Dimension(popupWidth, popupHeight)
 
-        val x = visibleRect.x + (visibleRect.width - popupWidth) / 2
-        val y = visibleRect.y + visibleRect.height - popupHeight
+        popup?.size = popupSize
+        popup?.show(RelativePoint(contentComponent, placement.location(visibleRect, popupSize, gapX, gapY)))
+    }
 
-        popup?.size = Dimension(popupWidth, popupHeight)
-        popup?.show(RelativePoint(contentComponent, Point(x, y)))
+    companion object {
+        private const val MIN_WIDTH = 300
+        private const val MIN_HEIGHT = 80
     }
 }

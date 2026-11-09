@@ -8,7 +8,9 @@ object DefaultConfig {
     "delay": 200,
     "maxColumns": 5,
     "sortGroupsFirst": true,
-    "position": "bottom-right",
+    "placement": "bottom-center",
+    "gapX": 0,
+    "gapY": 0,
     "showIcons": true
   },
   "overrides": {

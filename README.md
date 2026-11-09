@@ -20,6 +20,7 @@ A [which-key](https://github.com/folke/which-key.nvim) LazyVim-style popup for J
 - **LazyVim default group names** — common groups are labeled automatically (`+buffer`, `+code`, `+debug`, `+git`, `+search`, etc.)
 - **Customizable descriptions** — override any label using `g:WhichKeyDesc_` variables in your `.ideavimrc`
 - **JSON config file** — optional `~/.whichkey-lazy.json` for settings, per-key icon/description overrides, and custom bindings
+- **Settings tab** — popup placement and gap under Tools in the IDE settings
 - **Vertical list layout** — entries flow top-to-bottom, wrapping into columns only when needed
 - **Breadcrumb navigation** — see your current path through the key tree
 
@@ -173,6 +174,9 @@ The plugin works out of the box with zero configuration. For advanced customizat
     "delay": 200,
     "maxColumns": 5,
     "sortGroupsFirst": true,
+    "placement": "bottom-center",
+    "gapX": 0,
+    "gapY": 0,
     "showIcons": true
   },
   "overrides": {
@@ -189,7 +193,12 @@ The plugin works out of the box with zero configuration. For advanced customizat
 | `delay` | `200` | Milliseconds before popup appears |
 | `maxColumns` | `5` | Maximum number of columns in the popup |
 | `sortGroupsFirst` | `true` | Show groups before actions |
+| `placement` | `bottom-center` | Popup anchor: `bottom-left`, `bottom-center`, `bottom-right`, `center`, `top-left`, `top-center`, `top-right` |
+| `gapX` | `0` | Horizontal gap in pixels from the selected anchor |
+| `gapY` | `0` | Vertical gap in pixels from the selected anchor |
 | `showIcons` | `true` | Show icons next to entries |
+
+Placement and gap can also be changed in **Settings → Tools → Which Key Lazy**. The settings page writes to `~/.whichkey-lazy.json`, so the file remains the single source of truth.
 
 ### Per-key Overrides
 

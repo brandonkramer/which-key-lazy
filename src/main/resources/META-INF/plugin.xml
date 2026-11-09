@@ -57,6 +57,11 @@
             serviceImplementation="lazyideavim.whichkeylazy.config.WhichKeyConfigService"/>
         <applicationService
             serviceImplementation="lazyideavim.whichkeylazy.WhichKeyPluginDisposable"/>
+        <applicationConfigurable
+            groupId="tools"
+            id="lazyideavim.whichkeylazy.settings"
+            instance="lazyideavim.whichkeylazy.config.WhichKeyConfigurable"
+            displayName="Which Key Lazy"/>
         <postStartupActivity
             implementation="lazyideavim.whichkeylazy.WhichKeyStartup"/>
         <notificationGroup id="lazyideavim.whichkeylazy"
