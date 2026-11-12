@@ -11,7 +11,7 @@ group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
 repositories {
@@ -27,8 +27,10 @@ dependencies {
     }
 
     intellijPlatform {
-        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
-        plugin("IdeaVIM", "2.27.2")
+        intellijIdea("2026.3") {
+            useCache = true
+        }
+        plugin("IdeaVIM", "2.48.1")
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)

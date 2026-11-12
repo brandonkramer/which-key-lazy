@@ -1,7 +1,7 @@
 [versions]
-kotlin = "2.1.0"
-intellijPlatform = "2.11.0"
-changelog = "2.2.1"
+kotlin = "2.4.20"
+intellijPlatform = "2.20.1"
+changelog = "2.4.0"
 kotlinxSerialization = "1.7.3"
 
 [libraries]
